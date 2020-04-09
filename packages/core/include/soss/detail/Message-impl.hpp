@@ -21,6 +21,7 @@
 #include <soss/Message.hpp>
 
 #include <type_traits>
+#include <soss/utilities.hpp>
 
 namespace soss {
 
@@ -36,14 +37,26 @@ using Raw_t = std::remove_cv_t<std::remove_reference_t<T>>;
 template<typename T>
 void Field::set(T&& data)
 {
-  _set(typeid(detail::Raw_t<T>),
-       new detail::Raw_t<T>(std::forward<T>(data)),
-       [](const void* other) -> void*
-          {
-            return new detail::Raw_t<T>(
-                  *static_cast<const detail::Raw_t<T>*>(other));
-          },
-       [](void* expired){ delete static_cast<detail::Raw_t<T>*>(expired); });
+  // converts the native type to soss type before putting it in the field, not doing
+  // so may cause later conversions to fail.
+  auto* soss_val = new SossType<T>();
+  try
+  {
+    soss::Convert<T>::to_soss(std::forward<T>(data), *soss_val);
+
+    _set(typeid(detail::Raw_t<SossType<T>>),
+         soss_val,
+         [](const void* other) -> void* {
+           return new detail::Raw_t<SossType<T>>(
+             *static_cast<const detail::Raw_t<SossType<T>>*>(other));
+         },
+         [](void* expired) { delete static_cast<detail::Raw_t<SossType<T>>*>(expired); });
+  }
+  catch (...)
+  {
+    delete soss_val;
+    throw;
+  }
 }
 
 //==============================================================================

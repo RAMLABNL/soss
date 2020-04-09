@@ -461,6 +461,23 @@ struct ContainerConvert
 };
 
 //==============================================================================
+template<std::size_t N, typename T0, typename... Ts>
+struct typeN { using type = typename typeN<N-1u, Ts...>::type; };
+
+template<typename T0, typename... Ts>
+struct typeN<0u, T0, Ts...> { using type = T0; };
+
+template<std::size_t, typename>
+struct argN;
+
+template<std::size_t N, typename R, typename... As>
+struct argN<N, R(As...)> { using type = typename typeN<N, As...>::type; };
+
+template<typename T>
+using SossType = typename std::decay<
+  typename argN<1u, decltype(soss::Convert<T>::to_soss)>::type>::type;
+
+//==============================================================================
 template<typename ElementType, typename Allocator>
 struct Convert<std::vector<ElementType, Allocator>>
     : ContainerConvert<

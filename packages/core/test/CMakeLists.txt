@@ -7,6 +7,7 @@ endif()
 add_executable(soss-core-test
   main.cpp
   unit/search_test.cpp
+  unit/conversion.cpp
 )
 
 set(thirdparty_dir "${CMAKE_CURRENT_LIST_DIR}/../../../thirdparty")
