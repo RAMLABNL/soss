@@ -214,6 +214,7 @@ public:
 
     _server.clear_access_channels(
       websocketpp::log::alevel::frame_header |
+      websocketpp::log::alevel::control |
       websocketpp::log::alevel::frame_payload);
 
     _server.init_asio();
